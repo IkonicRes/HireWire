@@ -182,7 +182,6 @@ const effects = {
 		const step = Math.floor(255 / depth);
 
 		const globalPos = frame % (str.length + depth);
-
 		const chars = [];
 		for (let i = 0, length = str.length; i < length; i++) {
 			const pos = -(i - globalPos);
