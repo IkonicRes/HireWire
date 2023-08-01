@@ -71,13 +71,11 @@ const getDepartmentTitles = async () => {
 
 const getRoleTitles = async () => {
   const roles = await getThingFromDatabase('roles');
-  console.log(roles)
   return roles.map(({title, salary, department_id}) => ({Role: title, Salary: salary, Department_ID: department_id}));
 };
 
 const getEmployeeNames = async () => {
   const employees = await getThingFromDatabase('employees');
-  console.log(employees)
   return employees.map(({first_name, last_name, role_id, manager_id}) => ({First_Name: first_name, Last_Name: last_name, Role_ID: role_id, Manager_ID: manager_id}));
 };
 
@@ -92,7 +90,6 @@ async function viewAllEmployees(employees) {
 
 const addRole = async () => {
   let tDepts = await getDepartmentTitles()
-  console.log(tDepts)
   try {
     const data = await inquire.prompt(
       [

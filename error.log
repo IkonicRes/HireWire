@@ -1,7 +1,0 @@
-TypeError: Cannot read properties of undefined (reading 'pipe')
-    at PromptUI.run (C:\Users\mihal\Documents\Coursework\HireWire\node_modules\inquirer\lib\ui\prompt.js:46:24)
-    at Object.promptModule [as prompt] (C:\Users\mihal\Documents\Coursework\HireWire\node_modules\inquirer\lib\inquirer.js:33:24)
-    at updateEmployeeRole (C:\Users\mihal\Documents\Coursework\HireWire\index.js:112:32)
-    at menu (C:\Users\mihal\Documents\Coursework\HireWire\index.js:175:13)
-    at processTicksAndRejections (node:internal/process/task_queues:96:5)
-    at async Timeout._onTimeout (C:\Users\mihal\Documents\Coursework\HireWire\index.js:213:7)
