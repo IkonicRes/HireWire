@@ -57,7 +57,7 @@ async function getThingFromDatabase(thing) {
   }
 }
 
-async function updateDatabase(stuff, task){
+async function updateDatabase(stuff, task) {
   try {
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
@@ -65,24 +65,33 @@ async function updateDatabase(stuff, task){
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
     });
-    var [rows, fields] = null
-    console.log(stuff) 
+
     switch (task) {
-      case 'roles':
-        [rows, fields] = await connection.execute("INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?);", [stuff.roleName, stuff.salary, stuff.departmentId])
-        break;
       case 'departments':
-        [rows, fields] = await connection.execute("INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?);", [stuff.roleName, stuff.salary, stuff.departmentId])
+        // Insert department data
+        await connection.execute("INSERT INTO departments (name) VALUES (?);", [stuff.departmentName]);
+        break;
+      case 'roles':
+        // Insert role data
+        await connection.execute("INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?);", [stuff.roleName, stuff.salary, stuff.departmentId]);
+        break;
+      case 'employees':
+        // Insert employee data
+        await connection.execute(
+          "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);",
+          [stuff.fName, stuff.lName, stuff.roleId, stuff.managerId || null] // Pass NULL if managerId is null or not provided
+        );
         break;
       default:
         break;
     }
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
+}
   
 
-}
+
 
 module.exports = {
   getThingFromDatabase, updateDatabase

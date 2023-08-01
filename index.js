@@ -129,7 +129,9 @@ const updateEmployeeRole = async () => {
 };
 
 async function addEmployee() {
-  getRoleTitles
+  let tRoles = await getRoleTitles()
+  let tDepts = await getDepartmentTitles()
+  console.log(tRoles)
   try {
     const data = await inquire.prompt(
       [
@@ -149,14 +151,19 @@ async function addEmployee() {
           type: "input"
         },
         {
-          name: "departmentId",
-          message: "What department would you like to add the role to?",
+          name: "roleId",
+          message: "What department would you like to add the new employee to?",
           type: "list",
           choices: tDepts,
+        },
+        {
+          name: "managerId",
+          message: "What is the manager's ID no.- if any- that you would like to assign to the new employee? Enter NULL for no manager.",
+          type: "input",
         }
       ]
     );
-    updateDatabase(data, 'roles')
+    updateDatabase(data, 'employees')
   } catch (error) {
     console.log(error); // Log the error to the file
   }
@@ -248,9 +255,9 @@ async function menu(employees, departments, roles) {
 
 async function startApp() {
   const characters = titleText.split('');
-  const print = scrollPrint();
-  print(titleText);
-  print('');
+  // const print = scrollPrint();
+  // print(titleText);
+  // print('');
   setTimeout(async () => {
     try {
       const employees = await getThingFromDatabase('employees');

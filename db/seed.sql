@@ -4,7 +4,7 @@ INSERT INTO departments(name) VALUES ("HR"),
 ("Design");
 
 INSERT INTO roles (title, salary, department_id)
-VALUES ("HR", 60000, 1),
+VALUES ("HR Rep", 60000, 1),
        ("Marketing", 90000, 3),
        ("Artist", 80000, 4),
        ("Developer", 75000, 2),
