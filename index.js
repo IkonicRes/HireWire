@@ -1,7 +1,7 @@
 const { getThingFromDatabase, updateDatabase } = require('./db');
 const chalkAnimation = require('./chalk')
 const inquire = require('inquirer')
-const readline = require('readline');
+const readline = require("readline");
 const fs = require('fs')
 
 
@@ -74,10 +74,28 @@ const getRoleTitles = async () => {
   return roles.map(({title, salary, department_id}) => ({Role: title, Salary: salary, Department_ID: department_id}));
 };
 
+const getRoleArray = async () => {
+  const roles = await getThingFromDatabase('roles');
+  return roles.map(({title}) => (title));
+};
+
+const getEmployeeNameArray = async () => {
+  const employees = await getThingFromDatabase('employees');
+  return employees.map(({first_name, last_name}) => (`${first_name} ${last_name}`));
+};
+
 const getEmployeeNames = async () => {
   const employees = await getThingFromDatabase('employees');
   return employees.map(({first_name, last_name, role_id, manager_id}) => ({First_Name: first_name, Last_Name: last_name, Role_ID: role_id, Manager_ID: manager_id}));
 };
+
+const getManagerName = async (id) => {
+  if (id == null) {
+    return null;
+  }
+  const managers = await getThingFromDatabase(`employees WHERE id = ${id}`);
+  return managers.map(({first_name, last_name}) => (`${first_name} ${last_name}`))[0]
+}
 
 async function viewAllEmployees(employees) {
   try {
@@ -119,19 +137,71 @@ const addRole = async () => {
 
 const updateEmployeeRole = async () => {
   try {
-    const data = await inquire.prompt(
-      /* Your questions here */
+    // Get the list of employees from the database
+    const employees = await getThingFromDatabase('employees');
+    const employeeNames = employees.map(({ first_name, last_name, index }) => ({
+      name: `${first_name} ${last_name}`,
+      value: `${first_name} ${last_name}`,
+    }));
+    const roles = await getThingFromDatabase('roles');
+    const roleTitles = roles.map((role) => role.title);
+    // Ask the user for the employee's name and new role
+    const data = await inquire.prompt([
+      {
+        type: 'list',
+        name: 'employee',
+        message: 'What is the name of the employee you would like to change the role of?',
+        choices: employeeNames,
+      },
+      {
+        type: 'list',
+        name: 'newRole',
+        message: 'Which role would you like to assign to the employee?',
+        choices: roleTitles,
+      },
+    ]);
+    const employeeId = employees.find(
+      (employee) =>
+        `${employee.first_name} ${employee.last_name}` === data.employee
+    )?.id;
+    const roleName = data.newRole;
+
+    const role = roles.find((role) => role.title === roleName);
+    const selectedRole = roles.find((role) => role.title === roleName);
+    const roleId = selectedRole.id;
+
+    // Find the selected employee from the list
+    const selectedEmployee = employees.find(
+      (employee) =>
+        `${employee.first_name} ${employee.last_name}` === data.employee
     );
-    console.log(data);
-  } catch (error) {
+
+   
+
+    if (!selectedEmployee || !selectedRole) {
+      console.log('Employee or Role not found.');
+      return;
+    }
+
+    // Update the employee's role and manager in the database
+    await updateDatabase(
+      { roleId, employeeId: selectedEmployee.id},
+      'updateRole'
+    );
+
+    console.log(`Successfully updated ${selectedEmployee.first_name} ${selectedEmployee.last_name}'s role to ${data.newRole}.`);
+  } 
+  catch (error) {
     console.log(error); // Log the error to the file
   }
 };
 
+
 async function addEmployee() {
-  let tRoles = await getRoleTitles()
+  let tRolesArray = await getRoleArray()
+  let tEmployeeArray = await getEmployeeNameArray()
+  tEmployeeArray.unshift("No manager")
   let tDepts = await getDepartmentTitles()
-  console.log(tRoles)
   try {
     const data = await inquire.prompt(
       [
@@ -147,23 +217,37 @@ async function addEmployee() {
         },
         {
           name: "roleId",
-          message: "What is the salary of your new role?",
-          type: "input"
+          message: "What role should this employee have?",
+          type: "list",
+          choices: tRolesArray
         },
         {
-          name: "roleId",
+          name: "deptId",
           message: "What department would you like to add the new employee to?",
           type: "list",
           choices: tDepts,
         },
         {
           name: "managerId",
-          message: "What is the manager's ID no.- if any- that you would like to assign to the new employee? Enter NULL for no manager.",
-          type: "input",
+          message: "What manager would you like to assign to the new employee?",
+          type: "list",
+          choices: tEmployeeArray
         }
       ]
     );
-    updateDatabase(data, 'employees')
+    console.log(data.managerId)
+    let manager = tEmployeeArray.indexOf(data.managerId)
+    if (data.managerId == 'No manager') {
+      manager = null
+    }
+    tData = {
+      fName: data.fName,
+      lName: data.lName,
+      roleId: tRolesArray.indexOf(data.roleId) + 1,
+      deptId: data.deptId,
+      managerId: manager
+    }
+    updateDatabase(tData, 'employees')
   } catch (error) {
     console.log(error); // Log the error to the file
   }
@@ -187,7 +271,7 @@ const addDepartment = async () => {
 };
 
 const printTable = (arr) => {
-  // console.log("log ", arr)
+  console.log('\n')
   console.table(arr)
 }
 
@@ -216,8 +300,18 @@ async function menu(employees, departments, roles) {
 
   switch (choice) {
     case 'View All Employees':
-      allEmployees = await viewAllEmployees(employees); // Pass the 'employees' array as an argument
-      printTable(allEmployees)
+      const allEmployees = await viewAllEmployees(employees); // Pass the 'employees' array as an argument
+      console.log(allEmployees)
+      const _employees = Promise.all(
+        allEmployees.map( async(value) => ({
+          first_name: value.First_Name,
+          last_name: value.Last_Name,
+          role_id: value.Role_ID,
+          manager: await getManagerName(value.Manager_ID)
+        }))
+      ).then((data) => {
+        printTable(data)
+      })
       break;
     case 'Add Employee':
       await addEmployee();
@@ -253,21 +347,39 @@ async function menu(employees, departments, roles) {
   }
 }
 
+var program_state = 1
+
+// readline.emitKeypressEvents(process.stdin);
+// if (process.stdin.isTTY) { process.stdin.setRawMode(true); }
+
+// process.stdin.on('keypress', (chunk, key) => {
+//   if (key && key.name == 'q') {
+//     program_state = 1
+//     console.log(program_state)
+//   }
+// })
+
+
+
+
 async function startApp() {
-  const characters = titleText.split('');
-  // const print = scrollPrint();
-  // print(titleText);
-  // print('');
-  setTimeout(async () => {
-    try {
-      const employees = await getThingFromDatabase('employees');
-      const departments = await getThingFromDatabase('departments');
-      const roles = await getThingFromDatabase('roles');
-      await menu(employees, departments, roles);
-    } catch (error) {
-      console.log("startApp error: ", error); // Log the error to the file
-    }
-  }, 500);
+  if (!program_state) {
+    const characters = titleText.split('');
+    // const print = scrollPrint();
+    // print(titleText);
+    // print('');
+  } else {
+    setTimeout(async () => {
+      try {
+        const employees = await getThingFromDatabase('employees');
+        const departments = await getThingFromDatabase('departments');
+        const roles = await getThingFromDatabase('roles');
+        await menu(employees, departments, roles);
+      } catch (error) {
+        console.log("startApp error: ", error); // Log the error to the file
+      }
+    }, 500);
+  }  
 }
 
 // Call the startApp function to start the application

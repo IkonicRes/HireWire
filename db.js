@@ -56,7 +56,12 @@ async function getThingFromDatabase(thing) {
     connection.close();
   }
 }
-
+/**
+ *
+ *
+ * @param {Object} stuff
+ * @param {String} task
+ */
 async function updateDatabase(stuff, task) {
   try {
     const connection = await mysql.createConnection({
@@ -65,7 +70,7 @@ async function updateDatabase(stuff, task) {
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
     });
-
+    var managerId;
     switch (task) {
       case 'departments':
         // Insert department data
@@ -77,11 +82,18 @@ async function updateDatabase(stuff, task) {
         break;
       case 'employees':
         // Insert employee data
+        managerId = stuff.managerId !== undefined ? stuff.managerId : null;
         await connection.execute(
           "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);",
-          [stuff.fName, stuff.lName, stuff.roleId, stuff.managerId || null] // Pass NULL if managerId is null or not provided
+          [stuff.fName, stuff.lName, stuff.roleId, managerId] // Pass null if managerId is null or not provided
         );
         break;
+      case 'updateRole':
+        await connection.execute(
+          "UPDATE employees SET role_id = ? WHERE id = ?;",
+          [stuff.roleId, stuff.employeeId]
+        );
+        break;  
       default:
         break;
     }
