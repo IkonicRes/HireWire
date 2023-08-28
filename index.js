@@ -235,7 +235,7 @@ async function addEmployee() {
         }
       ]
     );
-    console.log(data.managerId)
+    // console.log(data.managerId)
     let manager = tEmployeeArray.indexOf(data.managerId)
     if (data.managerId == 'No manager') {
       manager = null
@@ -301,7 +301,7 @@ async function menu(employees, departments, roles) {
   switch (choice) {
     case 'View All Employees':
       const allEmployees = await viewAllEmployees(employees); // Pass the 'employees' array as an argument
-      console.log(allEmployees)
+      // console.log(allEmployees)
       const _employees = Promise.all(
         allEmployees.map( async(value) => ({
           first_name: value.First_Name,
@@ -334,7 +334,7 @@ async function menu(employees, departments, roles) {
       await addDepartment();
       break;
     case 'Quit':
-      continue_ = false;
+      process. exit()
       break;
     default:
       console.log('Invalid choice. Please try again.\n');

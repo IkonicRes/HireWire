@@ -27,6 +27,7 @@ DB_NAME=hirewire_db
 in the project's root directory, then from the same place run "npm start" in the terminal. 
 Here is a video walkthrough of the program:  
 
+[HireWire Walkthrough](https://youtu.be/g9NiABJZRDw)
 
 
 ## Contact
